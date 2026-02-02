@@ -1,4 +1,0 @@
-project_id = "xramzpcuwxphvfitlcxp"
-
-[functions.alldl-proxy]
-verify_jwt = false

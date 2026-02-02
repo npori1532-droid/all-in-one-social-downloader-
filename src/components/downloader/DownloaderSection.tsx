@@ -9,7 +9,6 @@ import { toast } from "@/components/ui/sonner";
 import { DownloadResults } from "@/components/downloader/DownloadResults";
 import { detectPlatformFromUrl, parseAllDlResponse, type DownloadResult } from "@/lib/downloader";
 import { useRecentDownloads } from "@/hooks/use-recent-downloads";
-import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, Eraser, Loader2, ShieldCheck } from "lucide-react";
 
 const urlSchema = z
@@ -50,18 +49,23 @@ export function DownloaderSection() {
     }
 
     const cleanUrl = parsed.data;
+    const endpoint = `https://free-goat-api.onrender.com/alldl?url=${encodeURIComponent(cleanUrl)}`;
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("alldl-proxy", {
-        body: { url: cleanUrl },
+      const res = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
       });
 
-      if (error) {
-        throw new Error(error.message || "API error");
+      if (!res.ok) {
+        throw new Error(`API error (${res.status})`);
       }
 
-      const parsedResult = parseAllDlResponse(data, cleanUrl);
+      const json = await res.json();
+      const parsedResult = parseAllDlResponse(json, cleanUrl);
 
       if (!parsedResult.options.length) {
         toast.message("No download links found", {
